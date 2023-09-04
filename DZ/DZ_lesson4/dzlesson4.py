@@ -41,7 +41,7 @@ def maximum_berries(n, bush_number):
         max_berries = berries[bush_number - 1]+ berries[bush_number - 2] + berries[bush_number]
     return max_berries
 
-
+ 
 
 n = int(input('Введите количество кустов: '))
 bush_number = int(input('Введите номер куста: '))
