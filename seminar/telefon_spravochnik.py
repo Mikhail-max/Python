@@ -1,7 +1,8 @@
+from easygui import *
 import sqlite3
-# from easygui import *
+
 conn = sqlite3.connect("phonebook.db")
-# conn.row_factory = sqlite3.Row
+
 cursor = conn.cursor()
 
 cursor.execute("""CREATE TABLE IF NOT EXISTS phone (
@@ -12,85 +13,128 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS phone (
                address TEXT,
                city TEXT
 )""")
+def all():
+    cursor.execute("SELECT * FROM phone")
+    result = cursor.fetchall()
+    title = "Телефонный Справочник"
+    button = "Ok"
+    # list = {"Имя", "Телефон", "Доп. Телефон", "Почта", "Адрес", "Город"}
+    list = {}
+    list1 = []
+    # list2 = []
 
-# # # Вставляем данные в таблицу
-# cursor.execute("""INSERT INTO phone(name, phone1, phone2, email, address, city)
-#                   VALUES ('Alex', '89048402617','' , 'alex1975@mail.ru', 'proletarskaya 85', 'Moskva')
-#                """
-#                )
- 
-# # # Сохраняем изменения
-# conn.commit()
-# phone = [('Vika', '89253624565', '89366589674', 'vikentiy21@gmail.com', 'marinovskaya 87', 'Leningrad'),
-#          ('Ksenia', '89635825474', '', 'ksyha75@mail.ru', 'ogorodnaya 98', 'Rostov')]
 
-# cursor.executemany("INSERT INTO phone VALUES (?,?,?,?,?,?)", phone)
+    for row in result:
+    #     # msgbox(row, title, button )
+        # list = list["Имя"].append(row[0]) + list["Телефон"].append(row[1]) + list["Доп. Телефон"].append(row[2]) + list["Почта"].append(row[3]) + list["Адрес"].append(row[4]) + list["Город"].append(row[5])
+        list = {"Имя": row[0], "Телефон": row[1], "Доп. Телефон": row[2], "Почта": row[3], "Адрес" : row[4], "Город": row[5]}
+        
+        for key, value in list.items():
+           list1.append("{0}: {1}""\n".format(key,value) )
+   
+    list1 = "  " + ' '.join(str(x)+' ' for x in list1)
+  
+    
+    msgbox(list1, title, button )
+def find_contact_in_phonebook():
+    title = "Телефонный Справочник"
+    button = "Ok"
+    # list = {"Имя", "Телефон", "Доп. Телефон", "Почта", "Адрес", "Город"}
+    list = {}
+    list1 = []
+    find_contact = enterbox('Введите имя контакта, который нужно найти: ', title)
+    sql = "SELECT * FROM phone WHERE name=?"
+    cursor.execute(sql, [(find_contact)])
+    result_find = cursor.fetchall()
+    for row in result_find:
+    #     # msgbox(row, title, button )
+        # list = list["Имя"].append(row[0]) + list["Телефон"].append(row[1]) + list["Доп. Телефон"].append(row[2]) + list["Почта"].append(row[3]) + list["Адрес"].append(row[4]) + list["Город"].append(row[5])
+        list = {"Имя": row[0], "Телефон": row[1], "Доп. Телефон": row[2], "Почта": row[3], "Адрес" : row[4], "Город": row[5]}
+        
+        for key, value in list.items():
+           list1.append("{0}: {1}""\n".format(key,value) )
+   
+    list1 = "  " + ' '.join(str(x)+' ' for x in list1)
+  
+    
+    msgbox(list1, title, button )
+
+    # msg(result_find, title)
+def delete_cont():
+    title = "Телефонный Справочник"
+    delete_cont = enterbox('Введите контакт, который хотите удалить: ', title)
+    result_delete_cont = cursor.execute("SELECT name FROM phone WHERE name=?", (delete_cont, )).fetchone()
+
+    if result_delete_cont:
+        cursor.execute("DELETE FROM phone WHERE name=?", (delete_cont, )).fetchone()
+    # sql = "DELETE FROM phone WHERE name = ? ", (delete_cont, )
+    # cursor.execute(sql)
+        conn.commit()
+    else:
+        msgbox('Такого контакта не существует', title)
+def new_cont():
+    contact = enterbox("Введите имя нового контакта:", title)
+    result_contact = cursor.execute("SELECT name FROM phone WHERE name=?", (contact, )).fetchone()
+
+    if result_contact:
+        contact = result_contact
+        msgbox('Контакт существует!', title)
+
+    else:
+        phone1 = enterbox('Введите телефон нового контакта: ', title)
+        phone2 = enterbox('Введите дополнительный телефон нового контакта: ', title)
+        email = enterbox('Введите почту нового контакта: ', title)
+        address = enterbox('Введите адрес нового контакта: ', title)
+        city = enterbox('Введите город нового контакта: ', title)
+        data = (contact, phone1, phone2, email, address, city)
+        cursor.execute("INSERT INTO phone(name, phone1, phone2, email, address, city) VALUES (?,?,?,?,?,?)", data)
+        conn.commit()
+def redact_cont():
+    edit_contact_old = enterbox('Введите имя контакта, который вы хотите отредактировать: ')
+    result_contact = cursor.execute("SELECT name FROM phone WHERE name=?", (edit_contact_old, )).fetchone()
+    if result_contact:
+        edit_contact_new = enterbox('Введите новое имя контакта: ')
+        new_contact = """UPDATE phone set name=?, phone1=?, phone2=?, email=?, address=?, city=? where name=?"""
+        phone1 = enterbox('Введите телефон контакта: ')
+        phone2 = enterbox('Введите дополнительный телефон контакта: ')
+        email = enterbox('Введите почту контакта: ')
+        address = enterbox('Введите адрес контакта: ')
+        city = enterbox('Введите город контакта: ')
+        new_data = (edit_contact_new, phone1, phone2, email, address, city, edit_contact_old)
+        cursor.execute(new_contact, new_data)
+        conn.commit()
+    else:
+        msgbox('Контакт не существует!', title)
+
 conn.commit()
 
 while True:
 
-    print('Список команд:\n/all - посмотреть все контакты\n/add.contact - добавить новый контакт\n/delete.contact - удалить контакт\n/find.contact - найти контакт по имени\n/editing.contact - изменить контакт\n/end - закончить работу')
-    command = input('Введите команду: ')
+    title = "Телефонный справочник"
+    choices = ["Посмотреть все контакты", "Добавить новый контакт", "Удалить контакт", "Найти контакт по имени", "Изменить контакт", "Закончить работу"]
+    msg = "Выберите команду"
+    reply = choicebox(msg, title, choices = choices)
 
-    if command == '/all':
-        cursor.execute("SELECT * FROM phone")
-        result = cursor.fetchall()
-        for row in result:
-            print(row)
-    
-    # elif command == '/help':
-    #     print('/all - ,/add.contact - ,/delete.contact - ,/find.contact - ,/editing.contact - ,/end - ', end='/n')
-
-    elif command == '/add.contact':
-        contact = input('Введите имя нового контакта: ')
-        result_contact = cursor.execute("SELECT name FROM phone WHERE name=?", (contact, )).fetchone()
-
-        if result_contact:
-            contact = result_contact
-            print('Контакт существует!')
-
-        else:
-            phone1 = input('Введите телефон нового контакта: ')
-            phone2 = input('Введите дополнительный телефон нового контакта: ')
-            email = input('Введите почту нового контакта: ')
-            address = input('Введите адрес нового контакта: ')
-            city = input('Введите город нового контакта: ')
-            data = (contact, phone1, phone2, email, address, city)
-            cursor.execute("INSERT INTO phone(name, phone1, phone2, email, address, city) VALUES (?,?,?,?,?,?)", data)
-            conn.commit()
-
-    elif command == '/delete.contact':
-        delete_cont = input('Введите контакт, который хотите удалить: ')
-        result_delete_cont = cursor.execute("SELECT name FROM phone WHERE name=?", (delete_cont, )).fetchone()
-
-        if result_delete_cont:
-            cursor.execute("DELETE FROM phone WHERE name=?", (delete_cont, )).fetchone()
-        # sql = "DELETE FROM phone WHERE name = ? ", (delete_cont, )
-        # cursor.execute(sql)
-            conn.commit()
-        else:
-            print('Такого контакта не существует')
+    if reply == 'Посмотреть все контакты':
         
-    elif command == '/find.contact':
-        find_contact = input('Введите имя контакта, который нужно найти: ')
-        sql = "SELECT * FROM phone WHERE name=?"
-        cursor.execute(sql, [(find_contact)])
-        print(cursor.fetchall())
+        #   cursor.execute("SELECT * FROM phone")
+        # result = cursor.fetchall()
+        # title = "Телефонный Справочник"
+        # button = "Ok"
         
-    elif command == '/editing.contact':
-        edit_contact_old = input('Введите имя контакта, который вы хотите отредактировать: ')
-        edit_contact_new = input('Введите новое имя контакта: ')
-        new_contact = """UPDATE phone set name=?, phone1=?, phone2=?, email=?, address=?, city=? where name=?"""
-        phone1 = input('Введите телефон контакта: ')
-        phone2 = input('Введите дополнительный телефон контакта: ')
-        email = input('Введите почту контакта: ')
-        address = input('Введите адрес контакта: ')
-        city = input('Введите город контакта: ')
-        new_data = (edit_contact_new, phone1, phone2, email, address, city, edit_contact_old)
-        cursor.execute(new_contact, new_data)
-        conn.commit()
-        
-    elif command == '/end':
+        # for row in result:
+        #     print(row)
+        all()
+
+    elif reply == 'Добавить новый контакт':
+        new_cont()
+    elif reply == 'Удалить контакт':
+        delete_cont()
+    elif reply == 'Найти контакт по имени':
+        find_contact_in_phonebook()
+    elif reply == 'Изменить контакт':
+        redact_cont()
+    elif reply == 'Закончить работу':
         cursor.close()
         conn.close()
         print("Соединение с SQLite закрыто")
